@@ -10,6 +10,7 @@ import React, {
     useEffect,
     useCallback,
     useMemo,
+    useState,
 } from "react"
 import { addPropertyControls, ControlType } from "framer"
 
@@ -202,7 +203,7 @@ interface Props {
     imageSize: number
 
     // Animation style
-    animationStyle: "falling" | "circular"
+    animationStyle: "falling" | "circular" | "rising"
 
     // Preset
     preset: string
@@ -231,6 +232,8 @@ interface Props {
     // Interaction
     clickInteraction: boolean
     burstCount: number
+    trigger: boolean
+    triggerCount: number
 
     // Scheduling
     scheduleEnabled: boolean
@@ -246,6 +249,18 @@ interface Props {
 
 function rand(min: number, max: number) {
     return min + Math.random() * (max - min)
+}
+
+/** Resolve the active emoji array from props — module-level so trigger effect can use it */
+function resolveEmojis(p: Partial<Props>): string[] {
+    if (p.preset === "custom") {
+        const parsed = (p.customEmojis ?? "")
+            .split(/[\s,]+/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        return parsed.length > 0 ? parsed : PRESET_MAP.snow.emojis
+    }
+    return PRESET_MAP[p.preset ?? "snow"]?.emojis ?? PRESET_MAP.snow.emojis
 }
 
 function isWithinSchedule(
@@ -265,7 +280,6 @@ function isWithinSchedule(
     if (start <= end) {
         return current >= start && current <= end
     }
-    // Wraps year boundary (e.g. Dec 15 – Jan 5)
     return current >= start || current <= end
 }
 
@@ -277,20 +291,26 @@ function spawnParticle(
     staggerY = false
 ): Particle {
     const preset = PRESET_MAP[p.preset ?? "snow"] ?? PRESET_MAP.snow
-    const vy = rand(p.speedMin ?? preset.speedMin, p.speedMax ?? preset.speedMax)
-    const lifespan = Math.ceil((canvasH + 100) / vy) + rand(0, 60)
+    const isRising = p.animationStyle === "rising"
+
+    const rawSpeed = rand(p.speedMin ?? preset.speedMin, p.speedMax ?? preset.speedMax)
+    const vy = isRising ? -rawSpeed : rawSpeed
+    const lifespan = Math.ceil((canvasH + 100) / rawSpeed) + rand(0, 60)
 
     const xPos =
         p.spawnEdge === "random"
             ? rand(0, canvasW)
             : rand(-40, canvasW + 40)
+
     const yPos = staggerY
-        ? rand(-canvasH, canvasH)
+        ? rand(isRising ? 0 : -canvasH, isRising ? canvasH * 1.5 : canvasH)
+        : isRising
+        ? canvasH + (p.fontSize ?? 24) + rand(0, 40)
         : p.spawnEdge === "random"
         ? rand(-canvasH, canvasH)
         : -(p.fontSize ?? 24) - rand(0, 40)
 
-    const age = staggerY ? rand(0, lifespan * 0.8) : 0
+    const age = staggerY ? rand(0, lifespan * 0.6) : 0
 
     // Circular fields
     const isCircular = p.animationStyle === "circular"
@@ -373,8 +393,9 @@ function updateParticle(
     const preset = PRESET_MAP[p.preset] ?? PRESET_MAP.snow
     particle.age++
 
-    // Physics
-    particle.vy += (p.gravity ?? preset.gravity) * 0.5
+    // Gravity: invert for rising mode
+    const gravDir = p.animationStyle === "rising" ? -1 : 1
+    particle.vy += (p.gravity ?? preset.gravity) * 0.5 * gravDir
     particle.angle += particle.angularVelocity
 
     if (p.animationStyle === "circular" && !particle.isBurst) {
@@ -440,14 +461,18 @@ function isOffScreen(
     particle: Particle,
     canvasW: number,
     canvasH: number,
-    animationStyle: "falling" | "circular"
+    animationStyle: "falling" | "circular" | "rising"
 ): boolean {
     const refX =
         animationStyle === "circular" && !particle.isBurst
             ? particle.circleBaseX
             : particle.x
+    const offVert =
+        animationStyle === "rising"
+            ? particle.y < -80
+            : particle.y > canvasH + 80
     return (
-        particle.y > canvasH + 80 ||
+        offVert ||
         refX < -180 ||
         refX > canvasW + 180 ||
         particle.age >= particle.lifespan
@@ -479,6 +504,8 @@ export default function FallingParticles(props: Props) {
         scheduleEndDay,
         clickInteraction,
         burstCount,
+        trigger,
+        triggerCount,
         style,
     } = props
 
@@ -487,26 +514,56 @@ export default function FallingParticles(props: Props) {
     const rafRef = useRef<number>(0)
     const propsRef = useRef<Props>(props)
     const imageRef = useRef<HTMLImageElement | null>(null)
+    const prevTriggerRef = useRef<boolean>(false)
 
-    // Keep propsRef current every render (no-cost live-update for sliders)
+    const [imageStatus, setImageStatus] = useState<"idle" | "loading" | "loaded" | "error">("idle")
+
+    // Keep propsRef current every render (live slider updates)
     propsRef.current = props
 
-    // Image loading — runs independently of RAF loop
+    // Image loading with CORS status tracking
     useEffect(() => {
         if (particleType !== "image" || !imageUrl) {
             imageRef.current = null
+            setImageStatus("idle")
             return
         }
+        setImageStatus("loading")
         const img = new Image()
         img.crossOrigin = "anonymous"
         img.onload = () => {
             imageRef.current = img
+            setImageStatus("loaded")
         }
         img.onerror = () => {
             imageRef.current = null
+            setImageStatus("error")
         }
         img.src = imageUrl
     }, [particleType, imageUrl])
+
+    // Wired trigger — fires a burst on rising edge (false → true)
+    useEffect(() => {
+        if (trigger && !prevTriggerRef.current) {
+            const canvas = canvasRef.current
+            if (canvas) {
+                const rect = canvas.getBoundingClientRect()
+                const p = propsRef.current
+                const emojis = resolveEmojis(p)
+                particlesRef.current.push(
+                    ...Array.from({ length: p.triggerCount ?? 60 }, () =>
+                        spawnBurstParticle(
+                            rand(0, rect.width),
+                            rand(0, rect.height * 0.4),
+                            emojis,
+                            p
+                        )
+                    )
+                )
+            }
+        }
+        prevTriggerRef.current = trigger
+    }, [trigger])
 
     const scheduled = useMemo(
         () =>
@@ -526,7 +583,7 @@ export default function FallingParticles(props: Props) {
         ]
     )
 
-    // Main animation loop — restarts on structural changes
+    // Main animation loop
     useEffect(() => {
         if (!scheduled) return
         const canvas = canvasRef.current
@@ -549,18 +606,6 @@ export default function FallingParticles(props: Props) {
         }
         const { cssW: initW, cssH: initH } = syncSize()
 
-        const resolveEmojis = (p: Partial<Props>) => {
-            if (p.preset === "custom") {
-                const parsed = (p.customEmojis ?? "")
-                    .split(/[\s,]+/)
-                    .map((s) => s.trim())
-                    .filter(Boolean)
-                return parsed.length > 0 ? parsed : PRESET_MAP.snow.emojis
-            }
-            return PRESET_MAP[p.preset ?? "snow"]?.emojis ?? PRESET_MAP.snow.emojis
-        }
-
-        // Initialise pool with staggered Y to avoid empty-screen-then-waterfall artifact
         particlesRef.current = Array.from({ length: particleCount }, () =>
             spawnParticle(initW, initH, resolveEmojis(props), props, true)
         )
@@ -574,7 +619,7 @@ export default function FallingParticles(props: Props) {
             const w = cssW
             const h = cssH
             const safeEmojis = resolveEmojis(p)
-            const style = p.animationStyle ?? "falling"
+            const aStyle = p.animationStyle ?? "falling"
             const pType = p.particleType ?? "emoji"
             const img = imageRef.current
             const imgSize = p.imageSize ?? 40
@@ -585,17 +630,14 @@ export default function FallingParticles(props: Props) {
                 updateParticle(particle, w, h, p)
                 drawParticle(ctx!, particle, p.fontSize ?? 24, pType, img, imgSize)
 
-                if (isOffScreen(particle, w, h, style) && !particle.isBurst) {
-                    Object.assign(
-                        pool[i],
-                        spawnParticle(w, h, safeEmojis, p, false)
-                    )
+                if (isOffScreen(particle, w, h, aStyle) && !particle.isBurst) {
+                    Object.assign(pool[i], spawnParticle(w, h, safeEmojis, p, false))
                 }
             }
 
             // Remove expired burst particles
             particlesRef.current = pool.filter(
-                (pt) => !(pt.isBurst && isOffScreen(pt, w, h, style))
+                (pt) => !(pt.isBurst && isOffScreen(pt, w, h, aStyle))
             )
 
             rafRef.current = requestAnimationFrame(tick)
@@ -617,14 +659,7 @@ export default function FallingParticles(props: Props) {
             const x = e.clientX - rect.left
             const y = e.clientY - rect.top
             const p = propsRef.current
-            const emojis =
-                p.preset === "custom"
-                    ? (p.customEmojis ?? "")
-                          .split(/[\s,]+/)
-                          .map((s) => s.trim())
-                          .filter(Boolean)
-                    : PRESET_MAP[p.preset]?.emojis ?? PRESET_MAP.snow.emojis
-            const safeEmojis = emojis.length > 0 ? emojis : PRESET_MAP.snow.emojis
+            const safeEmojis = resolveEmojis(p)
             const burst = Array.from({ length: burstCount ?? 20 }, () =>
                 spawnBurstParticle(x, y, safeEmojis, p)
             )
@@ -658,6 +693,26 @@ export default function FallingParticles(props: Props) {
                 }}
                 onClick={handleClick}
             />
+            {particleType === "image" && imageStatus === "error" && (
+                <div
+                    style={{
+                        position: "absolute",
+                        bottom: 8,
+                        left: 8,
+                        right: 8,
+                        background: "rgba(220,53,53,0.92)",
+                        color: "#fff",
+                        padding: "6px 10px",
+                        borderRadius: 6,
+                        fontSize: 11,
+                        lineHeight: 1.4,
+                        pointerEvents: "none",
+                        zIndex: 10,
+                    }}
+                >
+                    ⚠️ Image failed to load. Check the URL is public and allows cross-origin requests (CORS).
+                </div>
+            )}
         </div>
     )
 }
@@ -697,8 +752,8 @@ addPropertyControls(FallingParticles, {
         type: ControlType.Enum,
         title: "Animation",
         defaultValue: "falling",
-        options: ["falling", "circular"],
-        optionTitles: ["Falling", "Circular"],
+        options: ["falling", "circular", "rising"],
+        optionTitles: ["Falling", "Circular", "🎈 Rising"],
     },
 
     // Preset
@@ -866,6 +921,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: "top",
         options: ["top", "random"],
         optionTitles: ["Top Edge", "Random"],
+        hidden: (props) => props.animationStyle === "rising",
     },
 
     // Interaction
@@ -885,6 +941,22 @@ addPropertyControls(FallingParticles, {
         step: 5,
         displayStepper: true,
         hidden: (props) => !props.clickInteraction,
+    },
+    trigger: {
+        type: ControlType.Boolean,
+        title: "Trigger Burst",
+        defaultValue: false,
+        enabledTitle: "Fire",
+        disabledTitle: "Ready",
+    },
+    triggerCount: {
+        type: ControlType.Number,
+        title: "Trigger Count",
+        defaultValue: 60,
+        min: 10,
+        max: 300,
+        step: 10,
+        displayStepper: true,
     },
 
     // Date Scheduling

@@ -1,54 +1,83 @@
-import { framer, CanvasNode, useIsAllowedTo } from "framer-plugin"
-import { useState, useEffect } from "react"
+import { framer, useSelection } from "framer-plugin"
+import { useState } from "react"
 import "./App.css"
 
-framer.showUI({
-  position: "top right",
-  width: 240,
-  height: 95,
-})
+framer.showUI({ position: "top right", width: 260, height: 460 })
 
-function useSelection() {
-  const [selection, setSelection] = useState<CanvasNode[]>([])
-
-  useEffect(() => {
-    return framer.subscribeToSelection(setSelection)
-  }, [])
-
-  return selection
-}
+const PRESETS = [
+    { key: "snow",         label: "❄️ Snow" },
+    { key: "leaves",       label: "🍂 Leaves" },
+    { key: "confetti",     label: "🎊 Confetti" },
+    { key: "hearts",       label: "❤️ Hearts" },
+    { key: "stars",        label: "⭐ Stars" },
+    { key: "cherryBlossom",label: "🌸 Cherry Blossom" },
+    { key: "money",        label: "💵 Money" },
+    { key: "emoji",        label: "😀 Emoji Mix" },
+    { key: "easter",       label: "🐣 Easter" },
+    { key: "mothersDay",   label: "💐 Mother's Day" },
+    { key: "halloween",    label: "🎃 Halloween" },
+    { key: "christmas",    label: "🎄 Christmas" },
+    { key: "glitter",      label: "✨ Glitter" },
+    { key: "custom",       label: "🎨 Custom" },
+]
 
 export function App() {
-  const selection = useSelection()
-  const isAllowed = useIsAllowedTo("addSVG")
-  const layer = selection.length === 1 ? "layer" : "layers"
+    const selection = useSelection()
+    const [active, setActive] = useState("snow")
+    const [status, setStatus] = useState("")
 
-  const handleAddSvg = async () => {
-    await framer.addSVG({
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path fill="#999" d="M20 0v8h-8L4 0ZM4 8h8l8 8h-8v8l-8-8Z"/></svg>`,
-      name: "Logo.svg",
-    })
-  }
+    // Detect a selected FallingParticles component instance
+    const target = selection.find(
+        (n) =>
+            "setAttributes" in n &&
+            (n.name.toLowerCase().includes("fallingparticles") ||
+                n.name.toLowerCase().includes("falling particles") ||
+                n.name.toLowerCase().includes("falling-particles"))
+    )
 
-  return (
-    <main>
-      <p>
-        Welcome! Check out the{" "}
-        <a
-          href="https://framer.com/developers/plugins/introduction"
-          target="_blank"
-        >
-          Docs
-        </a>{" "}
-        to start. You have {selection.length} {layer} selected.
-      </p>
-      <button
-        className="framer-button-primary"
-        onClick={handleAddSvg}
-        disabled={!isAllowed}
-      >
-        Insert Logo
-      </button>
-    </main>
-  )
+    const handleApply = async () => {
+        if (!target || !("setAttributes" in target)) {
+            setStatus("⚠️ Select a FallingParticles layer first")
+            return
+        }
+        try {
+            await (target as any).setAttributes({ controls: { preset: active } })
+            setStatus(`✓ Applied "${PRESETS.find((p) => p.key === active)?.label}"`)
+            setTimeout(() => setStatus(""), 2500)
+        } catch {
+            setStatus("❌ Could not update component")
+        }
+    }
+
+    return (
+        <main>
+            <p className="hint">
+                {target
+                    ? `✓ ${target.name}`
+                    : "Select a FallingParticles layer on the canvas"}
+            </p>
+
+            <div className="preset-grid">
+                {PRESETS.map((p) => (
+                    <button
+                        key={p.key}
+                        className={`preset-btn${active === p.key ? " active" : ""}`}
+                        onClick={() => setActive(p.key)}
+                    >
+                        {p.label}
+                    </button>
+                ))}
+            </div>
+
+            {status && <p className="status">{status}</p>}
+
+            <button
+                className="framer-button-primary apply-btn"
+                onClick={handleApply}
+                disabled={!target}
+            >
+                Apply Preset
+            </button>
+        </main>
+    )
 }
