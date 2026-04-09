@@ -671,8 +671,7 @@ addPropertyControls(FallingParticles, {
         title: "Particle Type",
         defaultValue: "emoji",
         options: ["emoji", "image"],
-        optionTitles: ["Emoji", "Image"],
-        displaySegmentedControl: true,
+        optionTitles: ["Emoji", "Image / Logo"],
     },
     imageUrl: {
         type: ControlType.String,
@@ -700,7 +699,6 @@ addPropertyControls(FallingParticles, {
         defaultValue: "falling",
         options: ["falling", "circular"],
         optionTitles: ["Falling", "Circular"],
-        displaySegmentedControl: true,
     },
 
     // Preset
@@ -867,8 +865,7 @@ addPropertyControls(FallingParticles, {
         title: "Spawn From",
         defaultValue: "top",
         options: ["top", "random"],
-        optionTitles: ["Top", "Random"],
-        displaySegmentedControl: true,
+        optionTitles: ["Top Edge", "Random"],
     },
 
     // Interaction
