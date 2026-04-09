@@ -534,17 +534,20 @@ export default function FallingParticles(props: Props) {
         const ctx = canvas.getContext("2d")
         if (!ctx) return
 
-        const syncSize = () => {
-            const { width, height } = canvas.getBoundingClientRect()
-            if (
-                canvas.width !== Math.round(width) ||
-                canvas.height !== Math.round(height)
-            ) {
-                canvas.width = Math.round(width) || 1
-                canvas.height = Math.round(height) || 1
+        const syncSize = (): { cssW: number; cssH: number; dpr: number } => {
+            const rect = canvas.getBoundingClientRect()
+            const dpr = window.devicePixelRatio || 1
+            const cssW = Math.round(rect.width) || 1
+            const cssH = Math.round(rect.height) || 1
+            const physW = Math.round(rect.width * dpr) || 1
+            const physH = Math.round(rect.height * dpr) || 1
+            if (canvas.width !== physW || canvas.height !== physH) {
+                canvas.width = physW
+                canvas.height = physH
             }
+            return { cssW, cssH, dpr }
         }
-        syncSize()
+        const { cssW: initW, cssH: initH } = syncSize()
 
         const resolveEmojis = (p: Partial<Props>) => {
             if (p.preset === "custom") {
@@ -559,16 +562,17 @@ export default function FallingParticles(props: Props) {
 
         // Initialise pool with staggered Y to avoid empty-screen-then-waterfall artifact
         particlesRef.current = Array.from({ length: particleCount }, () =>
-            spawnParticle(canvas.width, canvas.height, resolveEmojis(props), props, true)
+            spawnParticle(initW, initH, resolveEmojis(props), props, true)
         )
 
         function tick() {
-            syncSize()
-            ctx!.clearRect(0, 0, canvas!.width, canvas!.height)
+            const { cssW, cssH, dpr } = syncSize()
+            ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
+            ctx!.clearRect(0, 0, cssW, cssH)
 
             const p = propsRef.current
-            const w = canvas!.width
-            const h = canvas!.height
+            const w = cssW
+            const h = cssH
             const safeEmojis = resolveEmojis(p)
             const style = p.animationStyle ?? "falling"
             const pType = p.particleType ?? "emoji"
@@ -721,20 +725,20 @@ addPropertyControls(FallingParticles, {
             "custom",
         ],
         optionTitles: [
-            "Snow",
-            "Leaves",
-            "Confetti",
-            "Hearts",
-            "Stars",
-            "Cherry Blossom",
-            "Money",
-            "Emoji Mix",
-            "Easter",
-            "Mother's Day",
-            "Halloween",
-            "Christmas",
-            "Glitter",
-            "Custom",
+            "❄️ Snow",
+            "🍂 Leaves",
+            "🎊 Confetti",
+            "❤️ Hearts",
+            "⭐ Stars",
+            "🌸 Cherry Blossom",
+            "💵 Money",
+            "😀 Emoji Mix",
+            "🐣 Easter",
+            "💐 Mother's Day",
+            "🎃 Halloween",
+            "🎄 Christmas",
+            "✨ Glitter",
+            "🎨 Custom",
         ],
         hidden: (props) => props.particleType === "image",
     },
