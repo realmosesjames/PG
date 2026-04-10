@@ -73,7 +73,8 @@ interface Props {
     customEmojis: string
     imageUrl: string
     particleColor: string
-    particleShape: "circle" | "square"
+    particleShape: "snowflake" | "leaf" | "heart" | "star" | "confetti" | "sparkle" | "firework" | "shamrock" | "circle" | "square" | "custom"
+    customSvg: string
     sizeMin: number
     sizeMax: number
 
@@ -293,13 +294,109 @@ function updateParticle(particle: Particle, canvasW: number, canvasH: number, p:
     particle.opacity = Math.max(0, Math.min(1, particle.opacity))
 }
 
+// ─── SVG Shape Drawers ────────────────────────────────────────────────────────
+
+function drawShapeSnowflake(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, r * 0.1); ctx.lineCap = "round"
+    for (let i = 0; i < 6; i++) {
+        ctx.save(); ctx.rotate(i * Math.PI / 3)
+        ctx.beginPath()
+        ctx.moveTo(0, -r); ctx.lineTo(0, r)
+        ctx.moveTo(0, -r*0.6); ctx.lineTo(-r*0.28, -r*0.35)
+        ctx.moveTo(0, -r*0.6); ctx.lineTo( r*0.28, -r*0.35)
+        ctx.moveTo(0, -r*0.3); ctx.lineTo(-r*0.22, -r*0.05)
+        ctx.moveTo(0, -r*0.3); ctx.lineTo( r*0.22, -r*0.05)
+        ctx.stroke(); ctx.restore()
+    }
+}
+
+function drawShapeLeaf(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.moveTo(0, -r)
+    ctx.bezierCurveTo( r*0.8, -r*0.5,  r*0.8,  r*0.5, 0,  r)
+    ctx.bezierCurveTo(-r*0.8,  r*0.5, -r*0.8, -r*0.5, 0, -r)
+    ctx.fill()
+    ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = Math.max(0.5, r*0.07); ctx.lineCap = "round"
+    ctx.beginPath(); ctx.moveTo(0, -r*0.75); ctx.lineTo(0, r*0.75); ctx.stroke()
+}
+
+function drawShapeHeart(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.fillStyle = color
+    const w = r * 0.9
+    ctx.beginPath()
+    ctx.moveTo(0, r*0.6)
+    ctx.bezierCurveTo( w,  r*0.2,  w, -r*0.5, 0, -r*0.1)
+    ctx.bezierCurveTo(-w, -r*0.5, -w,  r*0.2, 0,  r*0.6)
+    ctx.fill()
+}
+
+function drawShapeStar(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.fillStyle = color
+    ctx.beginPath()
+    for (let i = 0; i < 5; i++) {
+        const oa = (i * 2 * Math.PI / 5) - Math.PI / 2
+        const ia = oa + Math.PI / 5
+        if (i === 0) ctx.moveTo(r*Math.cos(oa), r*Math.sin(oa))
+        else         ctx.lineTo(r*Math.cos(oa), r*Math.sin(oa))
+        ctx.lineTo(r*0.38*Math.cos(ia), r*0.38*Math.sin(ia))
+    }
+    ctx.closePath(); ctx.fill()
+}
+
+function drawShapeConfetti(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.moveTo(0, -r); ctx.lineTo(r*0.5, 0); ctx.lineTo(0, r); ctx.lineTo(-r*0.5, 0)
+    ctx.closePath(); ctx.fill()
+}
+
+function drawShapeSparkle(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.fillStyle = color
+    ctx.beginPath()
+    for (let i = 0; i < 4; i++) {
+        const a = i * Math.PI / 2 - Math.PI / 4
+        const b = a + Math.PI / 4
+        if (i === 0) ctx.moveTo(r*Math.cos(a), r*Math.sin(a))
+        else         ctx.lineTo(r*Math.cos(a), r*Math.sin(a))
+        ctx.lineTo(r*0.12*Math.cos(b), r*0.12*Math.sin(b))
+    }
+    ctx.closePath(); ctx.fill()
+}
+
+function drawShapeFirework(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, r*0.09); ctx.lineCap = "round"
+    for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI * 2 / 8
+        ctx.beginPath()
+        ctx.moveTo(r*0.18*Math.cos(a), r*0.18*Math.sin(a))
+        ctx.lineTo(r*Math.cos(a), r*Math.sin(a)); ctx.stroke()
+    }
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, r*0.18, 0, Math.PI*2); ctx.fill()
+}
+
+function drawShapeShamrock(ctx: CanvasRenderingContext2D, r: number, color: string) {
+    ctx.fillStyle = color
+    const lr = r * 0.46
+    for (let i = 0; i < 3; i++) {
+        const a = (i * Math.PI * 2 / 3) - Math.PI / 2
+        ctx.beginPath()
+        ctx.arc(lr*0.75*Math.cos(a), lr*0.75*Math.sin(a), lr, 0, Math.PI*2)
+        ctx.fill()
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, r*0.1); ctx.lineCap = "round"
+    ctx.beginPath(); ctx.moveTo(0, lr*0.4); ctx.lineTo(0, r); ctx.stroke()
+}
+
+// ─── Draw Particle ────────────────────────────────────────────────────────────
+
 function drawParticle(
     ctx: CanvasRenderingContext2D, particle: Particle,
     pType: "emoji" | "image" | "color",
     img: HTMLImageElement | null,
-    color: string, shape: "circle" | "square"
+    color: string, shape: string
 ): void {
-    const size = particle.size
+    const size = particle.size, r = size / 2
     ctx.save()
     ctx.globalAlpha = particle.opacity
     ctx.translate(particle.x, particle.y)
@@ -307,21 +404,29 @@ function drawParticle(
     ctx.scale(particle.scale, particle.scale)
 
     if (pType === "image" && img?.complete && img.naturalWidth > 0) {
-        ctx.drawImage(img, -size / 2, -size / 2, size, size)
+        ctx.drawImage(img, -r, -r, size, size)
     } else if (pType === "color") {
-        ctx.fillStyle = color || "#ffffff"
-        const r = size * 0.4
-        if (shape === "square") {
-            ctx.fillRect(-r, -r, r * 2, r * 2)
-        } else {
-            ctx.beginPath()
-            ctx.arc(0, 0, r, 0, Math.PI * 2)
-            ctx.fill()
+        switch (shape) {
+            case "snowflake": drawShapeSnowflake(ctx, r, color); break
+            case "leaf":      drawShapeLeaf(ctx, r, color);      break
+            case "heart":     drawShapeHeart(ctx, r, color);     break
+            case "star":      drawShapeStar(ctx, r, color);      break
+            case "confetti":  drawShapeConfetti(ctx, r, color);  break
+            case "sparkle":   drawShapeSparkle(ctx, r, color);   break
+            case "firework":  drawShapeFirework(ctx, r, color);  break
+            case "shamrock":  drawShapeShamrock(ctx, r, color);  break
+            case "custom":
+                if (img?.complete && img.naturalWidth > 0) ctx.drawImage(img, -r, -r, size, size)
+                else { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,r*0.8,0,Math.PI*2); ctx.fill() }
+                break
+            case "square":
+                ctx.fillStyle = color; ctx.fillRect(-r*0.8, -r*0.8, r*1.6, r*1.6); break
+            default:
+                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,r*0.8,0,Math.PI*2); ctx.fill()
         }
     } else {
         ctx.font = `${size}px serif`
-        ctx.textAlign = "center"
-        ctx.textBaseline = "middle"
+        ctx.textAlign = "center"; ctx.textBaseline = "middle"
         ctx.fillText(particle.emoji, 0, 0)
     }
     ctx.restore()
@@ -341,7 +446,7 @@ function isOffScreen(
 export default function FallingParticles(props: Props) {
     const {
         preview, background,
-        particleType, imageUrl, particleColor, particleShape,
+        particleType, imageUrl, particleColor, particleShape, customSvg,
         animationStyle, direction,
         particleCount, preset, customEmojis,
         clickInteraction,
@@ -359,6 +464,7 @@ export default function FallingParticles(props: Props) {
     const rafRef         = useRef<number>(0)
     const propsRef       = useRef<Props>(props)
     const imageRef       = useRef<HTMLImageElement | null>(null)
+    const svgImageRef    = useRef<HTMLImageElement | null>(null)
     const prevTriggerRef = useRef<boolean>(false)
     const pausedRef      = useRef<boolean>(false)
 
@@ -366,9 +472,10 @@ export default function FallingParticles(props: Props) {
 
     propsRef.current = props
 
-    // Image loading
+    // Image loading (Image Flakes mode OR Color Flakes Custom upload)
     useEffect(() => {
-        if (particleType !== "image" || !imageUrl) {
+        const needsImage = particleType === "image" || (particleType === "color" && particleShape === "custom")
+        if (!needsImage || !imageUrl) {
             imageRef.current = null
             setImageStatus("idle")
             return
@@ -379,7 +486,21 @@ export default function FallingParticles(props: Props) {
         img.onload  = () => { imageRef.current = img; setImageStatus("loaded") }
         img.onerror = () => { imageRef.current = null; setImageStatus("error") }
         img.src = imageUrl
-    }, [particleType, imageUrl])
+    }, [particleType, particleShape, imageUrl])
+
+    // Custom SVG paste → rasterised image
+    useEffect(() => {
+        if (particleType !== "color" || particleShape !== "custom" || !customSvg?.trim()) {
+            svgImageRef.current = null
+            return
+        }
+        const blob = new Blob([customSvg], { type: "image/svg+xml;charset=utf-8" })
+        const url  = URL.createObjectURL(blob)
+        const img  = new Image()
+        img.onload  = () => { svgImageRef.current = img; URL.revokeObjectURL(url) }
+        img.onerror = () => { svgImageRef.current = null; URL.revokeObjectURL(url) }
+        img.src = url
+    }, [particleType, particleShape, customSvg])
 
     // Wired trigger — fires on rising edge (false → true)
     useEffect(() => {
@@ -454,9 +575,13 @@ export default function FallingParticles(props: Props) {
             const aStyle = p.animationStyle ?? "falling"
             const dir    = p.direction     ?? "down"
             const pType  = p.particleType  ?? "emoji"
-            const img    = imageRef.current
+            const shape  = p.particleShape ?? "snowflake"
+            const img    = pType === "image"
+                ? imageRef.current
+                : (pType === "color" && shape === "custom")
+                ? (imageRef.current ?? svgImageRef.current)
+                : null
             const color  = p.particleColor ?? "#ffffff"
-            const shape  = p.particleShape ?? "circle"
 
             const pool = particlesRef.current
             for (let i = 0; i < pool.length; i++) {
@@ -567,14 +692,16 @@ addPropertyControls(FallingParticles, {
         defaultValue: "christmas",
         options: ["christmas","newYear","valentines","stPatricks","easter","ramadan","halloween","thanksgiving","blackFriday","winter","autumn","confetti","glitter","fireworks","custom"],
         optionTitles: ["🎄 Christmas","🎆 New Year","❤️ Valentine's Day","☘️ St. Patrick's","🐣 Easter","🌙 Ramadan","🎃 Halloween","🦃 Thanksgiving","🛍️ Black Friday","❄️ Winter","🍂 Autumn","🎊 Confetti","✨ Glitter","🎇 Fireworks","🎨 Custom"],
+        description: "Choose a ready-made holiday theme. Each preset sets the right particles, speed, and physics automatically.",
         hidden: (props) => !!props.advanced,
     },
     advanced: {
         type: ControlType.Boolean,
-        title: "Custom",
+        title: "Custom Mode",
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
+        description: "Switch to Custom mode to choose your own particle type, shape, physics, and more.",
     },
     preview: {
         type: ControlType.Boolean,
@@ -582,6 +709,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: true,
         enabledTitle: "On",
         disabledTitle: "Off",
+        description: "Show or hide the particle effect in the editor canvas.",
     },
     particleCount: {
         type: ControlType.Number,
@@ -589,47 +717,62 @@ addPropertyControls(FallingParticles, {
         defaultValue: 80,
         min: 5, max: 400, step: 5,
         displayStepper: true,
+        description: "Total number of particles on screen at once. Higher values are denser but use more CPU.",
     },
     background: {
         type: ControlType.Color,
         title: "Background",
         defaultValue: "rgba(0,0,0,0)",
+        description: "Optional solid or semi-transparent background color behind the particles.",
     },
 
     // ── Advanced: Particle ────────────────────────────────────────────────────
     particleType: {
         type: ControlType.Enum,
-        title: "Use",
+        title: "Particle Type",
         defaultValue: "emoji",
         options: ["emoji","image","color"],
-        optionTitles: ["Emoji","Image / Logo","Color Shapes"],
+        optionTitles: ["Emoji Flakes","Image / Logo","Color Flakes"],
+        description: "Emoji Flakes: any emoji character. Image/Logo: upload a PNG or SVG. Color Flakes: filled vector shapes.",
         hidden: adv,
     },
     customEmojis: {
         type: ControlType.String,
         title: "Emojis",
         defaultValue: "🎯 🔥 💎 🎸 🌈",
-        placeholder: "Space-separated emojis",
-        hidden: (props) => adv(props) || props.particleType !== "emoji" || props.preset !== "custom",
+        placeholder: "Space-separated emojis e.g. ❄️ ⭐ 🎁",
+        description: "Space-separated emoji characters to use as particles.",
+        hidden: (props) => adv(props) || props.particleType !== "emoji",
     },
     imageUrl: {
         type: ControlType.Image,
-        title: "Image / Logo",
-        hidden: (props) => adv(props) || props.particleType !== "image",
+        title: "Upload Image",
+        description: "Upload a PNG, JPG, or SVG file. Transparent PNGs and SVGs look best.",
+        hidden: (props) => adv(props) || (props.particleType !== "image" && !(props.particleType === "color" && props.particleShape === "custom")),
     },
     particleColor: {
         type: ControlType.Color,
-        title: "Color",
+        title: "Flake Color",
         defaultValue: "#ffffff",
+        description: "Fill color applied to all Color Flakes particles.",
         hidden: (props) => adv(props) || props.particleType !== "color",
     },
     particleShape: {
         type: ControlType.Enum,
         title: "Shape",
-        defaultValue: "circle",
-        options: ["circle","square"],
-        optionTitles: ["Circle","Square"],
+        defaultValue: "snowflake",
+        options: ["snowflake","leaf","heart","star","confetti","sparkle","firework","shamrock","circle","square","custom"],
+        optionTitles: ["❄ Snowflake","🍃 Leaf","♥ Heart","★ Star","◆ Confetti","✦ Sparkle","✸ Firework","☘ Shamrock","● Circle","■ Square","Custom SVG"],
+        description: "Choose one of 8 preset vector shapes, or select Custom SVG to use your own icon.",
         hidden: (props) => adv(props) || props.particleType !== "color",
+    },
+    customSvg: {
+        type: ControlType.String,
+        title: "SVG Code",
+        placeholder: "Paste <svg>…</svg> markup here",
+        displayTextArea: true,
+        description: "Paste raw SVG markup to use as a custom particle shape. Use the Upload field above to upload an SVG file instead.",
+        hidden: (props) => adv(props) || props.particleType !== "color" || props.particleShape !== "custom",
     },
     sizeMin: {
         type: ControlType.Number,
@@ -637,6 +780,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 12,
         min: 4, max: 100, step: 1, unit: "px",
         displayStepper: true,
+        description: "Smallest particle size. Each particle gets a random size between Min and Max.",
         hidden: adv,
     },
     sizeMax: {
@@ -645,6 +789,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 40,
         min: 4, max: 100, step: 1, unit: "px",
         displayStepper: true,
+        description: "Largest particle size. A wider range creates more natural variation.",
         hidden: adv,
     },
 
@@ -655,6 +800,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: "falling",
         options: ["falling","circular"],
         optionTitles: ["Falling","Circular"],
+        description: "Falling: particles drift downward. Circular: particles orbit in arcs while drifting across the screen.",
         hidden: adv,
     },
     direction: {
@@ -663,6 +809,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: "down",
         options: ["down","up"],
         optionTitles: ["Down","Up"],
+        description: "Down: particles fall from the top. Up: particles rise from the bottom (bubbles, balloons).",
         hidden: adv,
     },
     spawnEdge: {
@@ -671,6 +818,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: "top",
         options: ["top","random"],
         optionTitles: ["Top Edge","Random"],
+        description: "Top Edge: particles always enter from the top. Random: particles can appear anywhere on screen.",
         hidden: (props) => adv(props) || props.direction === "up",
     },
 
@@ -681,6 +829,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 20,
         min: 5, max: 120, step: 5,
         displayStepper: true,
+        description: "Minimum orbit radius for Circular mode.",
         hidden: (props) => adv(props) || props.animationStyle !== "circular",
     },
     circleRadiusMax: {
@@ -689,6 +838,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 60,
         min: 5, max: 120, step: 5,
         displayStepper: true,
+        description: "Maximum orbit radius for Circular mode. A wider range creates more visual depth.",
         hidden: (props) => adv(props) || props.animationStyle !== "circular",
     },
     circleSpeedScale: {
@@ -696,6 +846,7 @@ addPropertyControls(FallingParticles, {
         title: "Circle Speed",
         defaultValue: 1,
         min: 0.2, max: 3, step: 0.1,
+        description: "How fast particles orbit in Circular mode. 1 = default, 2 = double speed.",
         hidden: (props) => adv(props) || props.animationStyle !== "circular",
     },
 
@@ -705,6 +856,7 @@ addPropertyControls(FallingParticles, {
         title: "Realistic",
         defaultValue: true,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "When On, larger particles fall faster due to simulated mass. When Off, all particles move at the same speed.",
         hidden: adv,
     },
     gravity: {
@@ -712,6 +864,7 @@ addPropertyControls(FallingParticles, {
         title: "Gravity",
         defaultValue: 0.05,
         min: 0, max: 1, step: 0.01,
+        description: "Downward acceleration force. 0 = particles float, 1 = heavy fall like rain.",
         hidden: adv,
     },
     speedMin: {
@@ -719,6 +872,7 @@ addPropertyControls(FallingParticles, {
         title: "Speed Min",
         defaultValue: 0.8,
         min: 0.1, max: 10, step: 0.1,
+        description: "Minimum fall speed. Each particle gets a random speed between Min and Max.",
         hidden: adv,
     },
     speedMax: {
@@ -726,6 +880,7 @@ addPropertyControls(FallingParticles, {
         title: "Speed Max",
         defaultValue: 2.5,
         min: 0.1, max: 10, step: 0.1,
+        description: "Maximum fall speed. A wider range creates more natural variation.",
         hidden: adv,
     },
     windSpeed: {
@@ -733,6 +888,7 @@ addPropertyControls(FallingParticles, {
         title: "Wind Speed",
         defaultValue: 0,
         min: 0, max: 5, step: 0.05,
+        description: "Horizontal push force applied to all particles. 0 = no wind.",
         hidden: adv,
     },
     windDirection: {
@@ -740,6 +896,7 @@ addPropertyControls(FallingParticles, {
         title: "Wind Dir",
         defaultValue: 90,
         min: 0, max: 360, step: 1, unit: "°",
+        description: "Angle the wind blows toward. 0° = up, 90° = right, 180° = down, 270° = left.",
         hidden: (props) => adv(props) || (props.windSpeed ?? 0) === 0,
     },
     windVariance: {
@@ -747,6 +904,7 @@ addPropertyControls(FallingParticles, {
         title: "Wind Variance",
         defaultValue: 0.3,
         min: 0, max: 2, step: 0.05,
+        description: "Random variation added to wind per particle, creating a natural spread rather than uniform drift.",
         hidden: adv,
     },
     turbulence: {
@@ -754,6 +912,7 @@ addPropertyControls(FallingParticles, {
         title: "Turbulence",
         defaultValue: 0.1,
         min: 0, max: 1, step: 0.01,
+        description: "Random frame-by-frame nudge. Higher values create chaotic, gusty movement like real snow in wind.",
         hidden: adv,
     },
     rotationEnabled: {
@@ -761,6 +920,7 @@ addPropertyControls(FallingParticles, {
         title: "Rotation",
         defaultValue: true,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Whether particles spin while moving. Each particle gets an independent rotation speed and direction.",
         hidden: adv,
     },
     rotation: {
@@ -768,6 +928,7 @@ addPropertyControls(FallingParticles, {
         title: "Rotation Speed",
         defaultValue: 1.0,
         min: 0, max: 5, step: 0.1,
+        description: "How fast particles rotate. Higher = faster spin.",
         hidden: (props) => adv(props) || !(props.rotationEnabled ?? true),
     },
     driftEnabled: {
@@ -775,6 +936,7 @@ addPropertyControls(FallingParticles, {
         title: "Drift",
         defaultValue: true,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Whether particles sway side-to-side as they fall, like leaves in a light breeze.",
         hidden: adv,
     },
     drift: {
@@ -782,6 +944,7 @@ addPropertyControls(FallingParticles, {
         title: "Drift Amount",
         defaultValue: 1.0,
         min: 0, max: 5, step: 0.1,
+        description: "How far particles sway left and right. 0 = straight fall, 5 = heavy swaying.",
         hidden: (props) => adv(props) || !(props.driftEnabled ?? true),
     },
 
@@ -791,6 +954,7 @@ addPropertyControls(FallingParticles, {
         title: "Opacity",
         defaultValue: 1.0,
         min: 0.1, max: 1.0, step: 0.05,
+        description: "Maximum transparency of all particles. 1 = fully opaque, 0.1 = nearly invisible.",
         hidden: adv,
     },
     fadeIn: {
@@ -798,6 +962,7 @@ addPropertyControls(FallingParticles, {
         title: "Fade In",
         defaultValue: true,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Particles fade in gently when they first spawn, avoiding a harsh pop-in effect.",
         hidden: adv,
     },
     fadeOut: {
@@ -805,6 +970,7 @@ addPropertyControls(FallingParticles, {
         title: "Fade Out",
         defaultValue: true,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Particles fade out smoothly before they leave the screen.",
         hidden: adv,
     },
 
@@ -814,6 +980,7 @@ addPropertyControls(FallingParticles, {
         title: "Blur Layer",
         defaultValue: false,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Adds a frosted-glass backdrop blur layer behind the particles.",
         hidden: adv,
     },
     backdropBlur: {
@@ -821,6 +988,7 @@ addPropertyControls(FallingParticles, {
         title: "Blur Amount",
         defaultValue: 8,
         min: 0, max: 40, step: 1, unit: "px",
+        description: "Strength of the backdrop blur. Higher values create a more frosted, diffused effect.",
         hidden: (props) => adv(props) || !props.backgroundEnabled,
     },
     overlayEnabled: {
@@ -828,12 +996,14 @@ addPropertyControls(FallingParticles, {
         title: "Overlay",
         defaultValue: false,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Adds a semi-transparent color tint layer on top of everything.",
         hidden: adv,
     },
     overlayColor: {
         type: ControlType.Color,
         title: "Overlay Color",
         defaultValue: "#000000",
+        description: "Color of the overlay tint.",
         hidden: (props) => adv(props) || !props.overlayEnabled,
     },
     overlayOpacity: {
@@ -841,6 +1011,7 @@ addPropertyControls(FallingParticles, {
         title: "Overlay Opacity",
         defaultValue: 20,
         min: 0, max: 100, step: 1, unit: "%",
+        description: "How opaque the overlay tint is. 0% = invisible, 100% = fully solid.",
         hidden: (props) => adv(props) || !props.overlayEnabled,
     },
     zIndex: {
@@ -848,15 +1019,17 @@ addPropertyControls(FallingParticles, {
         title: "Z-Index",
         defaultValue: 9999,
         min: 0, max: 99999, step: 1,
+        description: "CSS stacking order. 9999 places particles above most page content. Lower values place them behind content.",
         hidden: adv,
     },
 
     // ── Advanced: Interaction ─────────────────────────────────────────────────
     clickInteraction: {
         type: ControlType.Boolean,
-        title: "Click",
+        title: "Click Interaction",
         defaultValue: true,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Enable click and touch interactions on the canvas. Works on both mouse and mobile.",
         hidden: adv,
     },
     clickAction: {
@@ -865,6 +1038,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: "burst",
         options: ["burst","disappear","changeDirection"],
         optionTitles: ["Burst","Disappear","Change Direction"],
+        description: "Burst: spawns new particles at the click point. Disappear: removes nearby particles. Change Direction: reverses their velocity.",
         hidden: (props) => adv(props) || !props.clickInteraction,
     },
     burstCount: {
@@ -873,6 +1047,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 20,
         min: 5, max: 100, step: 5,
         displayStepper: true,
+        description: "Number of particles spawned per click in Burst mode.",
         hidden: (props) => adv(props) || !props.clickInteraction || props.clickAction !== "burst",
     },
     burstSpeed: {
@@ -880,6 +1055,7 @@ addPropertyControls(FallingParticles, {
         title: "Burst Speed",
         defaultValue: 5,
         min: 1, max: 20, step: 0.5,
+        description: "How fast burst particles fly outward from the click point.",
         hidden: (props) => adv(props) || !props.clickInteraction || props.clickAction !== "burst",
     },
     trigger: {
@@ -887,6 +1063,7 @@ addPropertyControls(FallingParticles, {
         title: "Trigger",
         defaultValue: false,
         enabledTitle: "Fire", disabledTitle: "Ready",
+        description: "Wire to a Framer variable or button. Each Off→On transition fires a particle burst.",
         hidden: adv,
     },
     triggerCount: {
@@ -895,6 +1072,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 60,
         min: 10, max: 300, step: 10,
         displayStepper: true,
+        description: "Number of particles fired per trigger event.",
         hidden: adv,
     },
 
@@ -904,6 +1082,7 @@ addPropertyControls(FallingParticles, {
         title: "Date Schedule",
         defaultValue: false,
         enabledTitle: "On", disabledTitle: "Off",
+        description: "Only show the effect between the set start and end dates. Hides automatically outside that range.",
         hidden: adv,
     },
     scheduleStartMonth: {
@@ -912,6 +1091,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 12,
         min: 1, max: 12, step: 1,
         displayStepper: true,
+        description: "Month the effect becomes visible (1 = January, 12 = December).",
         hidden: (props) => adv(props) || !props.scheduleEnabled,
     },
     scheduleStartDay: {
@@ -920,6 +1100,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 1,
         min: 1, max: 31, step: 1,
         displayStepper: true,
+        description: "Day of the start month when the effect turns on.",
         hidden: (props) => adv(props) || !props.scheduleEnabled,
     },
     scheduleEndMonth: {
@@ -928,6 +1109,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 12,
         min: 1, max: 12, step: 1,
         displayStepper: true,
+        description: "Month the effect stops being visible.",
         hidden: (props) => adv(props) || !props.scheduleEnabled,
     },
     scheduleEndDay: {
@@ -936,6 +1118,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: 31,
         min: 1, max: 31, step: 1,
         displayStepper: true,
+        description: "Day of the end month when the effect turns off.",
         hidden: (props) => adv(props) || !props.scheduleEnabled,
     },
 })
