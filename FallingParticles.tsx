@@ -28,20 +28,21 @@ interface PresetEntry {
 }
 
 const PRESET_MAP: Record<string, PresetEntry> = {
-    snow:         { emojis: ["❄️","🌨","❅","❆","✦"],              gravity:0.03, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.3, driftAmount:0.8 },
-    leaves:       { emojis: ["🍂","🍁","🍃","🌿"],                  gravity:0.05, windX:0.2,  windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:1.2 },
-    confetti:     { emojis: ["🎊","🎉","🎈","✨","⭐"],              gravity:0.08, windX:0,    windVariance:0.5, speedMin:1,   speedMax:4,   rotationSpeed:3,   driftAmount:0.5 },
-    hearts:       { emojis: ["❤️","🧡","💛","💚","💙","💜","🩷"],   gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.5, speedMax:1.5, rotationSpeed:0.5, driftAmount:1.5 },
-    stars:        { emojis: ["⭐","🌟","✨","💫","🌠"],              gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:2,   driftAmount:0.6 },
-    cherryBlossom:{ emojis: ["🌸","🌺","🌹","🏵️"],                 gravity:0.03, windX:0.15, windVariance:0.3, speedMin:0.5, speedMax:1.5, rotationSpeed:0.8, driftAmount:1.0 },
-    money:        { emojis: ["💵","💴","💶","💸","💰"],              gravity:0.07, windX:0,    windVariance:0.3, speedMin:1,   speedMax:3,   rotationSpeed:2,   driftAmount:0.4 },
-    emoji:        { emojis: ["😀","🎯","🔥","💎","🎸"],              gravity:0.06, windX:0,    windVariance:0.4, speedMin:1,   speedMax:3,   rotationSpeed:2.5, driftAmount:0.7 },
-    easter:       { emojis: ["🐣","🥚","🐇","🌷","🌸"],              gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:1,   driftAmount:1.2 },
-    mothersDay:   { emojis: ["💐","🌷","🌹","❤️","💝"],              gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.5, speedMax:1.5, rotationSpeed:0.5, driftAmount:1.5 },
-    halloween:    { emojis: ["🎃","👻","🕷️","🦇","🕸️"],             gravity:0.05, windX:0,    windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:0.8 },
-    christmas:    { emojis: ["🎄","🎅","🎁","⭐","🦌"],              gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.8, driftAmount:0.9 },
-    glitter:      { emojis: ["✨","💫","⭐","🌟","💎","🔮"],          gravity:0.03, windX:0,    windVariance:0.5, speedMin:0.3, speedMax:1.5, rotationSpeed:3,   driftAmount:2.0 },
-    custom:       { emojis: [],                                      gravity:0.05, windX:0,    windVariance:0.3, speedMin:0.8, speedMax:2.5, rotationSpeed:1,   driftAmount:1.0 },
+    christmas:    { emojis: ["🎄","🎅","🎁","❄️","⭐","🦌","🔔","🧦","🍪"],  gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.8, driftAmount:0.9 },
+    newYear:      { emojis: ["🎆","🎇","✨","🥂","🎊","🎉","🍾","💫","🌟"],  gravity:0.06, windX:0,    windVariance:0.5, speedMin:1,   speedMax:3,   rotationSpeed:2.5, driftAmount:0.8 },
+    valentines:   { emojis: ["❤️","🩷","💕","💝","🌹","💘","🫶","💌","🍫"],  gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.5, speedMax:1.5, rotationSpeed:0.5, driftAmount:1.5 },
+    stPatricks:   { emojis: ["🍀","☘️","🌈","🎩","🪄","🟢","🍺","🌿"],      gravity:0.04, windX:0.1,  windVariance:0.3, speedMin:0.8, speedMax:2,   rotationSpeed:1.2, driftAmount:1.1 },
+    easter:       { emojis: ["🐣","🥚","🐇","🌷","🌸","🐰","🌻","🦋"],      gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:1,   driftAmount:1.2 },
+    ramadan:      { emojis: ["🌙","⭐","✨","🕌","🪔","💫","🌠","🏮"],       gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.3, speedMax:1.5, rotationSpeed:0.8, driftAmount:1.0 },
+    halloween:    { emojis: ["🎃","👻","🕷️","🦇","🕸️","💀","🍬","🧙","😈"], gravity:0.05, windX:0,    windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:0.8 },
+    thanksgiving: { emojis: ["🍂","🍁","🦃","🥧","🌽","🍎","🍇","🌾"],      gravity:0.05, windX:0.15, windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:1.2 },
+    blackFriday:  { emojis: ["🛍️","🏷️","💳","🛒","💸","💰","🎁","🔖"],     gravity:0.07, windX:0,    windVariance:0.3, speedMin:1,   speedMax:3,   rotationSpeed:2,   driftAmount:0.5 },
+    winter:       { emojis: ["❄️","🌨","⛄","🧊","❅","✦","🌬️","🏔️"],      gravity:0.03, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.3, driftAmount:0.8 },
+    autumn:       { emojis: ["🍂","🍁","🍃","🌿","🌾","🍄","🎃","🌰"],      gravity:0.05, windX:0.2,  windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:1.2 },
+    confetti:     { emojis: ["🎊","🎉","🎈","✨","⭐","🎀","🎁","🪅","🎏"],  gravity:0.08, windX:0,    windVariance:0.5, speedMin:1,   speedMax:4,   rotationSpeed:3,   driftAmount:0.5 },
+    glitter:      { emojis: ["✨","💫","⭐","🌟","💎","🔮","🪩","💠","🔷"],  gravity:0.03, windX:0,    windVariance:0.5, speedMin:0.3, speedMax:1.5, rotationSpeed:3,   driftAmount:2.0 },
+    fireworks:    { emojis: ["🎆","🎇","💥","✨","⭐","🌟","💫","🔴","🟡"],  gravity:0.04, windX:0,    windVariance:0.4, speedMin:1,   speedMax:4,   rotationSpeed:3,   driftAmount:0.6 },
+    custom:       { emojis: [],                                                gravity:0.05, windX:0,    windVariance:0.3, speedMin:0.8, speedMax:2.5, rotationSpeed:1,   driftAmount:1.0 },
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -129,9 +130,9 @@ function rand(min: number, max: number) { return min + Math.random() * (max - mi
 function resolveEmojis(p: Partial<Props>): string[] {
     if (p.preset === "custom") {
         const parsed = (p.customEmojis ?? "").split(/[\s,]+/).map(s => s.trim()).filter(Boolean)
-        return parsed.length > 0 ? parsed : PRESET_MAP.snow.emojis
+        return parsed.length > 0 ? parsed : PRESET_MAP.winter.emojis
     }
-    return PRESET_MAP[p.preset ?? "snow"]?.emojis ?? PRESET_MAP.snow.emojis
+    return PRESET_MAP[p.preset ?? "winter"]?.emojis ?? PRESET_MAP.winter.emojis
 }
 
 function isWithinSchedule(enabled: boolean, sm: number, sd: number, em: number, ed: number): boolean {
@@ -146,7 +147,7 @@ function spawnParticle(
     canvasW: number, canvasH: number, emojis: string[],
     p: Partial<Props>, staggerY = false
 ): Particle {
-    const preset   = PRESET_MAP[p.preset ?? "snow"] ?? PRESET_MAP.snow
+    const preset   = PRESET_MAP[p.preset ?? "winter"] ?? PRESET_MAP.winter
     const goingUp  = p.direction === "up"
 
     // Per-particle size
@@ -257,7 +258,7 @@ function applyClickAction(
 }
 
 function updateParticle(particle: Particle, canvasW: number, canvasH: number, p: Props): void {
-    const preset  = PRESET_MAP[p.preset] ?? PRESET_MAP.snow
+    const preset  = PRESET_MAP[p.preset] ?? PRESET_MAP.winter
     const gravDir = p.direction === "up" ? -1 : 1
     particle.age++
 
@@ -563,9 +564,9 @@ addPropertyControls(FallingParticles, {
     preset: {
         type: ControlType.Enum,
         title: "Preset",
-        defaultValue: "snow",
-        options: ["snow","leaves","confetti","hearts","stars","cherryBlossom","money","emoji","easter","mothersDay","halloween","christmas","glitter","custom"],
-        optionTitles: ["❄️ Snow","🍂 Leaves","🎊 Confetti","❤️ Hearts","⭐ Stars","🌸 Cherry Blossom","💵 Money","😀 Emoji Mix","🐣 Easter","💐 Mother's Day","🎃 Halloween","🎄 Christmas","✨ Glitter","🎨 Custom"],
+        defaultValue: "christmas",
+        options: ["christmas","newYear","valentines","stPatricks","easter","ramadan","halloween","thanksgiving","blackFriday","winter","autumn","confetti","glitter","fireworks","custom"],
+        optionTitles: ["🎄 Christmas","🎆 New Year","❤️ Valentine's Day","☘️ St. Patrick's","🐣 Easter","🌙 Ramadan","🎃 Halloween","🦃 Thanksgiving","🛍️ Black Friday","❄️ Winter","🍂 Autumn","🎊 Confetti","✨ Glitter","🎇 Fireworks","🎨 Custom"],
         hidden: (props) => !!props.advanced,
     },
     advanced: {
