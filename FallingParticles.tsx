@@ -17,7 +17,9 @@ import { addPropertyControls, ControlType } from "framer"
 // ─── Presets ─────────────────────────────────────────────────────────────────
 
 interface PresetEntry {
-    emojis: string[]
+    shape: string      // SVG shape used in preset mode
+    color: string      // fill/stroke color used in preset mode
+    emojis: string[]   // used in custom/emoji mode only
     gravity: number
     windX: number
     windVariance: number
@@ -28,21 +30,21 @@ interface PresetEntry {
 }
 
 const PRESET_MAP: Record<string, PresetEntry> = {
-    christmas:    { emojis: ["🎄","🎅","🎁","❄️","⭐","🦌","🔔","🧦","🍪"],  gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.8, driftAmount:0.9 },
-    newYear:      { emojis: ["🎆","🎇","✨","🥂","🎊","🎉","🍾","💫","🌟"],  gravity:0.06, windX:0,    windVariance:0.5, speedMin:1,   speedMax:3,   rotationSpeed:2.5, driftAmount:0.8 },
-    valentines:   { emojis: ["❤️","🩷","💕","💝","🌹","💘","🫶","💌","🍫"],  gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.5, speedMax:1.5, rotationSpeed:0.5, driftAmount:1.5 },
-    stPatricks:   { emojis: ["🍀","☘️","🌈","🎩","🪄","🟢","🍺","🌿"],      gravity:0.04, windX:0.1,  windVariance:0.3, speedMin:0.8, speedMax:2,   rotationSpeed:1.2, driftAmount:1.1 },
-    easter:       { emojis: ["🐣","🥚","🐇","🌷","🌸","🐰","🌻","🦋"],      gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:1,   driftAmount:1.2 },
-    ramadan:      { emojis: ["🌙","⭐","✨","🕌","🪔","💫","🌠","🏮"],       gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.3, speedMax:1.5, rotationSpeed:0.8, driftAmount:1.0 },
-    halloween:    { emojis: ["🎃","👻","🕷️","🦇","🕸️","💀","🍬","🧙","😈"], gravity:0.05, windX:0,    windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:0.8 },
-    thanksgiving: { emojis: ["🍂","🍁","🦃","🥧","🌽","🍎","🍇","🌾"],      gravity:0.05, windX:0.15, windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:1.2 },
-    blackFriday:  { emojis: ["🛍️","🏷️","💳","🛒","💸","💰","🎁","🔖"],     gravity:0.07, windX:0,    windVariance:0.3, speedMin:1,   speedMax:3,   rotationSpeed:2,   driftAmount:0.5 },
-    winter:       { emojis: ["❄️","🌨","⛄","🧊","❅","✦","🌬️","🏔️"],      gravity:0.03, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.3, driftAmount:0.8 },
-    autumn:       { emojis: ["🍂","🍁","🍃","🌿","🌾","🍄","🎃","🌰"],      gravity:0.05, windX:0.2,  windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:1.2 },
-    confetti:     { emojis: ["🎊","🎉","🎈","✨","⭐","🎀","🎁","🪅","🎏"],  gravity:0.08, windX:0,    windVariance:0.5, speedMin:1,   speedMax:4,   rotationSpeed:3,   driftAmount:0.5 },
-    glitter:      { emojis: ["✨","💫","⭐","🌟","💎","🔮","🪩","💠","🔷"],  gravity:0.03, windX:0,    windVariance:0.5, speedMin:0.3, speedMax:1.5, rotationSpeed:3,   driftAmount:2.0 },
-    fireworks:    { emojis: ["🎆","🎇","💥","✨","⭐","🌟","💫","🔴","🟡"],  gravity:0.04, windX:0,    windVariance:0.4, speedMin:1,   speedMax:4,   rotationSpeed:3,   driftAmount:0.6 },
-    custom:       { emojis: [],                                                gravity:0.05, windX:0,    windVariance:0.3, speedMin:0.8, speedMax:2.5, rotationSpeed:1,   driftAmount:1.0 },
+    christmas:    { shape:"snowflake", color:"#FFFFFF", emojis:[], gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.8, driftAmount:0.9 },
+    newYear:      { shape:"firework",  color:"#FFD700", emojis:[], gravity:0.06, windX:0,    windVariance:0.5, speedMin:1,   speedMax:3,   rotationSpeed:2.5, driftAmount:0.8 },
+    valentines:   { shape:"heart",     color:"#FF1493", emojis:[], gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.5, speedMax:1.5, rotationSpeed:0.5, driftAmount:1.5 },
+    stPatricks:   { shape:"shamrock",  color:"#00C853", emojis:[], gravity:0.04, windX:0.1,  windVariance:0.3, speedMin:0.8, speedMax:2,   rotationSpeed:1.2, driftAmount:1.1 },
+    easter:       { shape:"star",      color:"#FFB6C1", emojis:[], gravity:0.04, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:1,   driftAmount:1.2 },
+    ramadan:      { shape:"star",      color:"#FFD700", emojis:[], gravity:0.02, windX:0,    windVariance:0.2, speedMin:0.3, speedMax:1.5, rotationSpeed:0.8, driftAmount:1.0 },
+    halloween:    { shape:"leaf",      color:"#FF8C00", emojis:[], gravity:0.05, windX:0,    windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:0.8 },
+    thanksgiving: { shape:"leaf",      color:"#D2691E", emojis:[], gravity:0.05, windX:0.15, windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:1.2 },
+    blackFriday:  { shape:"confetti",  color:"#111111", emojis:[], gravity:0.07, windX:0,    windVariance:0.3, speedMin:1,   speedMax:3,   rotationSpeed:2,   driftAmount:0.5 },
+    winter:       { shape:"snowflake", color:"#87CEEB", emojis:[], gravity:0.03, windX:0,    windVariance:0.3, speedMin:0.5, speedMax:2,   rotationSpeed:0.3, driftAmount:0.8 },
+    autumn:       { shape:"leaf",      color:"#FF8C00", emojis:[], gravity:0.05, windX:0.2,  windVariance:0.4, speedMin:0.8, speedMax:2.5, rotationSpeed:1.5, driftAmount:1.2 },
+    confetti:     { shape:"confetti",  color:"#FF69B4", emojis:[], gravity:0.08, windX:0,    windVariance:0.5, speedMin:1,   speedMax:4,   rotationSpeed:3,   driftAmount:0.5 },
+    glitter:      { shape:"sparkle",   color:"#FFD700", emojis:[], gravity:0.03, windX:0,    windVariance:0.5, speedMin:0.3, speedMax:1.5, rotationSpeed:3,   driftAmount:2.0 },
+    fireworks:    { shape:"firework",  color:"#FF4500", emojis:[], gravity:0.04, windX:0,    windVariance:0.4, speedMin:1,   speedMax:4,   rotationSpeed:3,   driftAmount:0.6 },
+    custom:       { shape:"snowflake", color:"#ffffff", emojis:[], gravity:0.05, windX:0,    windVariance:0.3, speedMin:0.8, speedMax:2.5, rotationSpeed:1,   driftAmount:1.0 },
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -294,98 +296,121 @@ function updateParticle(particle: Particle, canvasW: number, canvasH: number, p:
     particle.opacity = Math.max(0, Math.min(1, particle.opacity))
 }
 
-// ─── SVG Shape Drawers ────────────────────────────────────────────────────────
+// ─── Default Icons ────────────────────────────────────────────────────────────
 
-function drawShapeSnowflake(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, r * 0.1); ctx.lineCap = "round"
-    for (let i = 0; i < 6; i++) {
-        ctx.save(); ctx.rotate(i * Math.PI / 3)
+const defaultIcons: Record<string, (ctx: CanvasRenderingContext2D, r: number, color: string) => void> = {
+    snowflake: (ctx, r, color) => {
+        ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, r * 0.1); ctx.lineCap = "round"
+        for (let i = 0; i < 6; i++) {
+            ctx.save(); ctx.rotate(i * Math.PI / 3)
+            ctx.beginPath()
+            ctx.moveTo(0, -r); ctx.lineTo(0, r)
+            ctx.moveTo(0, -r*0.6); ctx.lineTo(-r*0.28, -r*0.35)
+            ctx.moveTo(0, -r*0.6); ctx.lineTo( r*0.28, -r*0.35)
+            ctx.moveTo(0, -r*0.3); ctx.lineTo(-r*0.22, -r*0.05)
+            ctx.moveTo(0, -r*0.3); ctx.lineTo( r*0.22, -r*0.05)
+            ctx.stroke(); ctx.restore()
+        }
+    },
+    leaf: (ctx, r, color) => {
+        ctx.fillStyle = color
         ctx.beginPath()
-        ctx.moveTo(0, -r); ctx.lineTo(0, r)
-        ctx.moveTo(0, -r*0.6); ctx.lineTo(-r*0.28, -r*0.35)
-        ctx.moveTo(0, -r*0.6); ctx.lineTo( r*0.28, -r*0.35)
-        ctx.moveTo(0, -r*0.3); ctx.lineTo(-r*0.22, -r*0.05)
-        ctx.moveTo(0, -r*0.3); ctx.lineTo( r*0.22, -r*0.05)
-        ctx.stroke(); ctx.restore()
-    }
-}
-
-function drawShapeLeaf(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.moveTo(0, -r)
-    ctx.bezierCurveTo( r*0.8, -r*0.5,  r*0.8,  r*0.5, 0,  r)
-    ctx.bezierCurveTo(-r*0.8,  r*0.5, -r*0.8, -r*0.5, 0, -r)
-    ctx.fill()
-    ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = Math.max(0.5, r*0.07); ctx.lineCap = "round"
-    ctx.beginPath(); ctx.moveTo(0, -r*0.75); ctx.lineTo(0, r*0.75); ctx.stroke()
-}
-
-function drawShapeHeart(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.fillStyle = color
-    const w = r * 0.9
-    ctx.beginPath()
-    ctx.moveTo(0, r*0.6)
-    ctx.bezierCurveTo( w,  r*0.2,  w, -r*0.5, 0, -r*0.1)
-    ctx.bezierCurveTo(-w, -r*0.5, -w,  r*0.2, 0,  r*0.6)
-    ctx.fill()
-}
-
-function drawShapeStar(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.fillStyle = color
-    ctx.beginPath()
-    for (let i = 0; i < 5; i++) {
-        const oa = (i * 2 * Math.PI / 5) - Math.PI / 2
-        const ia = oa + Math.PI / 5
-        if (i === 0) ctx.moveTo(r*Math.cos(oa), r*Math.sin(oa))
-        else         ctx.lineTo(r*Math.cos(oa), r*Math.sin(oa))
-        ctx.lineTo(r*0.38*Math.cos(ia), r*0.38*Math.sin(ia))
-    }
-    ctx.closePath(); ctx.fill()
-}
-
-function drawShapeConfetti(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.moveTo(0, -r); ctx.lineTo(r*0.5, 0); ctx.lineTo(0, r); ctx.lineTo(-r*0.5, 0)
-    ctx.closePath(); ctx.fill()
-}
-
-function drawShapeSparkle(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.fillStyle = color
-    ctx.beginPath()
-    for (let i = 0; i < 4; i++) {
-        const a = i * Math.PI / 2 - Math.PI / 4
-        const b = a + Math.PI / 4
-        if (i === 0) ctx.moveTo(r*Math.cos(a), r*Math.sin(a))
-        else         ctx.lineTo(r*Math.cos(a), r*Math.sin(a))
-        ctx.lineTo(r*0.12*Math.cos(b), r*0.12*Math.sin(b))
-    }
-    ctx.closePath(); ctx.fill()
-}
-
-function drawShapeFirework(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, r*0.09); ctx.lineCap = "round"
-    for (let i = 0; i < 8; i++) {
-        const a = i * Math.PI * 2 / 8
-        ctx.beginPath()
-        ctx.moveTo(r*0.18*Math.cos(a), r*0.18*Math.sin(a))
-        ctx.lineTo(r*Math.cos(a), r*Math.sin(a)); ctx.stroke()
-    }
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, r*0.18, 0, Math.PI*2); ctx.fill()
-}
-
-function drawShapeShamrock(ctx: CanvasRenderingContext2D, r: number, color: string) {
-    ctx.fillStyle = color
-    const lr = r * 0.46
-    for (let i = 0; i < 3; i++) {
-        const a = (i * Math.PI * 2 / 3) - Math.PI / 2
-        ctx.beginPath()
-        ctx.arc(lr*0.75*Math.cos(a), lr*0.75*Math.sin(a), lr, 0, Math.PI*2)
+        ctx.moveTo(0, -r)
+        ctx.bezierCurveTo( r*0.8, -r*0.5,  r*0.8,  r*0.5, 0,  r)
+        ctx.bezierCurveTo(-r*0.8,  r*0.5, -r*0.8, -r*0.5, 0, -r)
         ctx.fill()
-    }
-    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, r*0.1); ctx.lineCap = "round"
-    ctx.beginPath(); ctx.moveTo(0, lr*0.4); ctx.lineTo(0, r); ctx.stroke()
+        ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = Math.max(0.5, r*0.07); ctx.lineCap = "round"
+        ctx.beginPath(); ctx.moveTo(0, -r*0.75); ctx.lineTo(0, r*0.75); ctx.stroke()
+    },
+    heart: (ctx, r, color) => {
+        ctx.fillStyle = color
+        const w = r * 0.9
+        ctx.beginPath()
+        ctx.moveTo(0, r*0.6)
+        ctx.bezierCurveTo( w,  r*0.2,  w, -r*0.5, 0, -r*0.1)
+        ctx.bezierCurveTo(-w, -r*0.5, -w,  r*0.2, 0,  r*0.6)
+        ctx.fill()
+    },
+    // Four-pointed star/sparkle
+    star: (ctx, r, color) => {
+        ctx.fillStyle = color
+        ctx.beginPath()
+        for (let i = 0; i < 4; i++) {
+            const oa = i * Math.PI / 2 - Math.PI / 2
+            const ia = oa + Math.PI / 4
+            if (i === 0) ctx.moveTo(r*Math.cos(oa), r*Math.sin(oa))
+            else         ctx.lineTo(r*Math.cos(oa), r*Math.sin(oa))
+            ctx.lineTo(r*0.2*Math.cos(ia), r*0.2*Math.sin(ia))
+        }
+        ctx.closePath(); ctx.fill()
+    },
+    // Jagged confetti streamer
+    confetti: (ctx, r, color) => {
+        ctx.fillStyle = color
+        ctx.beginPath()
+        ctx.moveTo(-r*0.3, -r)
+        ctx.lineTo( r*0.3, -r*0.85)
+        ctx.lineTo( r*0.5, -r*0.4)
+        ctx.lineTo( r*0.2,  0)
+        ctx.lineTo( r*0.5,  r*0.4)
+        ctx.lineTo( r*0.3,  r*0.85)
+        ctx.lineTo(-r*0.2,  r)
+        ctx.lineTo(-r*0.5,  r*0.5)
+        ctx.lineTo(-r*0.3,  0)
+        ctx.lineTo(-r*0.5, -r*0.5)
+        ctx.closePath(); ctx.fill()
+    },
+    // Cross-shaped sparkle with small stars at diagonals
+    sparkle: (ctx, r, color) => {
+        ctx.fillStyle = color
+        ctx.beginPath()
+        for (let i = 0; i < 4; i++) {
+            const oa = i * Math.PI / 2 - Math.PI / 4
+            const ia = oa + Math.PI / 4
+            if (i === 0) ctx.moveTo(r*Math.cos(oa), r*Math.sin(oa))
+            else         ctx.lineTo(r*Math.cos(oa), r*Math.sin(oa))
+            ctx.lineTo(r*0.12*Math.cos(ia), r*0.12*Math.sin(ia))
+        }
+        ctx.closePath(); ctx.fill()
+        const sd = r * 0.6, sr = r * 0.18
+        for (let d = 0; d < 4; d++) {
+            const ba = d * Math.PI / 2
+            const cx = sd * Math.cos(ba), cy = sd * Math.sin(ba)
+            ctx.beginPath()
+            for (let i = 0; i < 4; i++) {
+                const oa = i * Math.PI / 2 - Math.PI / 4
+                const ia = oa + Math.PI / 4
+                const x1 = cx + sr * Math.cos(oa), y1 = cy + sr * Math.sin(oa)
+                const x2 = cx + sr * 0.2 * Math.cos(ia), y2 = cy + sr * 0.2 * Math.sin(ia)
+                if (i === 0) ctx.moveTo(x1, y1)
+                else         ctx.lineTo(x1, y1)
+                ctx.lineTo(x2, y2)
+            }
+            ctx.closePath(); ctx.fill()
+        }
+    },
+    firework: (ctx, r, color) => {
+        ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, r*0.09); ctx.lineCap = "round"
+        for (let i = 0; i < 8; i++) {
+            const a = i * Math.PI * 2 / 8
+            ctx.beginPath()
+            ctx.moveTo(r*0.18*Math.cos(a), r*0.18*Math.sin(a))
+            ctx.lineTo(r*Math.cos(a), r*Math.sin(a)); ctx.stroke()
+        }
+        ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, r*0.18, 0, Math.PI*2); ctx.fill()
+    },
+    shamrock: (ctx, r, color) => {
+        ctx.fillStyle = color
+        const lr = r * 0.46
+        for (let i = 0; i < 3; i++) {
+            const a = (i * Math.PI * 2 / 3) - Math.PI / 2
+            ctx.beginPath()
+            ctx.arc(lr*0.75*Math.cos(a), lr*0.75*Math.sin(a), lr, 0, Math.PI*2)
+            ctx.fill()
+        }
+        ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, r*0.1); ctx.lineCap = "round"
+        ctx.beginPath(); ctx.moveTo(0, lr*0.4); ctx.lineTo(0, r); ctx.stroke()
+    },
 }
 
 // ─── Draw Particle ────────────────────────────────────────────────────────────
@@ -406,23 +431,17 @@ function drawParticle(
     if (pType === "image" && img?.complete && img.naturalWidth > 0) {
         ctx.drawImage(img, -r, -r, size, size)
     } else if (pType === "color") {
-        switch (shape) {
-            case "snowflake": drawShapeSnowflake(ctx, r, color); break
-            case "leaf":      drawShapeLeaf(ctx, r, color);      break
-            case "heart":     drawShapeHeart(ctx, r, color);     break
-            case "star":      drawShapeStar(ctx, r, color);      break
-            case "confetti":  drawShapeConfetti(ctx, r, color);  break
-            case "sparkle":   drawShapeSparkle(ctx, r, color);   break
-            case "firework":  drawShapeFirework(ctx, r, color);  break
-            case "shamrock":  drawShapeShamrock(ctx, r, color);  break
-            case "custom":
-                if (img?.complete && img.naturalWidth > 0) ctx.drawImage(img, -r, -r, size, size)
-                else { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,r*0.8,0,Math.PI*2); ctx.fill() }
-                break
-            case "square":
-                ctx.fillStyle = color; ctx.fillRect(-r*0.8, -r*0.8, r*1.6, r*1.6); break
-            default:
-                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,r*0.8,0,Math.PI*2); ctx.fill()
+        const drawFn = defaultIcons[shape]
+        if (drawFn) {
+            drawFn(ctx, r, color)
+        } else if (shape === "custom") {
+            if (img?.complete && img.naturalWidth > 0)
+                ctx.drawImage(img, -r, -r, size, size)
+            else { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,r*0.8,0,Math.PI*2); ctx.fill() }
+        } else if (shape === "square") {
+            ctx.fillStyle = color; ctx.fillRect(-r*0.8, -r*0.8, r*1.6, r*1.6)
+        } else {
+            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,r*0.8,0,Math.PI*2); ctx.fill()
         }
     } else {
         ctx.font = `${size}px serif`
@@ -439,6 +458,13 @@ function isOffScreen(
     const refX    = animStyle === "circular" && !particle.isBurst ? particle.circleBaseX : particle.x
     const offVert = dir === "up" ? particle.y < -80 : particle.y > canvasH + 80
     return offVert || refX < -180 || refX > canvasW + 180 || particle.age >= particle.lifespan
+}
+
+// ─── SVG Color Injection ──────────────────────────────────────────────────────
+
+function injectSvgColor(svg: string, color: string): string {
+    const style = `<style>* { fill: ${color} !important; stroke: ${color} !important; }</style>`
+    return svg.replace(/(<svg\b[^>]*)>/, `$1>${style}`)
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -488,19 +514,20 @@ export default function FallingParticles(props: Props) {
         img.src = imageUrl
     }, [particleType, particleShape, imageUrl])
 
-    // Custom SVG paste → rasterised image
+    // Custom SVG paste → rasterised image (color injected)
     useEffect(() => {
         if (particleType !== "color" || particleShape !== "custom" || !customSvg?.trim()) {
             svgImageRef.current = null
             return
         }
-        const blob = new Blob([customSvg], { type: "image/svg+xml;charset=utf-8" })
+        const colored = injectSvgColor(customSvg, particleColor ?? "#ffffff")
+        const blob = new Blob([colored], { type: "image/svg+xml;charset=utf-8" })
         const url  = URL.createObjectURL(blob)
         const img  = new Image()
         img.onload  = () => { svgImageRef.current = img; URL.revokeObjectURL(url) }
         img.onerror = () => { svgImageRef.current = null; URL.revokeObjectURL(url) }
         img.src = url
-    }, [particleType, particleShape, customSvg])
+    }, [particleType, particleShape, customSvg, particleColor])
 
     // Wired trigger — fires on rising edge (false → true)
     useEffect(() => {
@@ -570,18 +597,20 @@ export default function FallingParticles(props: Props) {
             ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
             ctx!.clearRect(0, 0, cssW, cssH)
 
-            const p      = propsRef.current
-            const emojis = resolveEmojis(p)
+            const p           = propsRef.current
+            const presetEntry  = PRESET_MAP[p.preset ?? "christmas"] ?? PRESET_MAP.christmas
+            const isPresetMode = !p.advanced
+            const emojis = isPresetMode ? [] : resolveEmojis(p)
             const aStyle = p.animationStyle ?? "falling"
             const dir    = p.direction     ?? "down"
-            const pType  = p.particleType  ?? "emoji"
-            const shape  = p.particleShape ?? "snowflake"
+            const pType  = isPresetMode ? "color" : (p.particleType  ?? "emoji")
+            const shape  = isPresetMode ? presetEntry.shape : (p.particleShape ?? "snowflake")
+            const color  = isPresetMode ? presetEntry.color : (p.particleColor ?? "#ffffff")
             const img    = pType === "image"
                 ? imageRef.current
                 : (pType === "color" && shape === "custom")
                 ? (imageRef.current ?? svgImageRef.current)
                 : null
-            const color  = p.particleColor ?? "#ffffff"
 
             const pool = particlesRef.current
             for (let i = 0; i < pool.length; i++) {
