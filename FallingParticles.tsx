@@ -603,7 +603,7 @@ export default function FallingParticles(props: Props) {
 
             const p           = propsRef.current
             const presetEntry  = PRESET_MAP[p.preset ?? "christmas"] ?? PRESET_MAP.christmas
-            const isPresetMode = !p.advanced
+            const isPresetMode = p.preset !== "custom"
             const emojis = resolveEmojis(p)
             const aStyle = p.animationStyle ?? "falling"
             const dir    = p.direction     ?? "down"
@@ -633,7 +633,7 @@ export default function FallingParticles(props: Props) {
         rafRef.current = requestAnimationFrame(tick)
         return () => { cancelAnimationFrame(rafRef.current) }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [particleCount, preset, advanced, customEmojis, animationStyle, direction, particleType, preview, scheduled])
+    }, [particleCount, preset, customEmojis, animationStyle, direction, particleType, preview, scheduled])
 
     // Shared interaction logic
     const handleInteraction = useCallback((canvasX: number, canvasY: number) => {
@@ -714,7 +714,8 @@ export default function FallingParticles(props: Props) {
 
 // ─── Property Controls ────────────────────────────────────────────────────────
 
-const adv = (props: Partial<Props>) => !props.advanced
+// adv = true means we are in a holiday preset (hide custom controls)
+const adv = (props: Partial<Props>) => props.preset !== "custom"
 
 addPropertyControls(FallingParticles, {
 
@@ -723,18 +724,9 @@ addPropertyControls(FallingParticles, {
         type: ControlType.Enum,
         title: "Preset",
         defaultValue: "christmas",
-        options: ["christmas","newYear","valentines","stPatricks","easter","ramadan","halloween","thanksgiving","blackFriday","winter","autumn","confetti","glitter","fireworks","custom"],
-        optionTitles: ["🎄 Christmas","🎆 New Year","❤️ Valentine's Day","☘️ St. Patrick's","🐣 Easter","🌙 Ramadan","🎃 Halloween","🦃 Thanksgiving","🛍️ Black Friday","❄️ Winter","🍂 Autumn","🎊 Confetti","✨ Glitter","🎇 Fireworks","🎨 Custom"],
-        description: "Choose a ready-made holiday theme. Each preset sets the right particles, speed, and physics automatically.",
-        hidden: (props) => !!props.advanced,
-    },
-    advanced: {
-        type: ControlType.Boolean,
-        title: "Custom Mode",
-        defaultValue: false,
-        enabledTitle: "On",
-        disabledTitle: "Off",
-        description: "Switch to Custom mode to choose your own particle type, shape, physics, and more.",
+        options: ["custom","christmas","newYear","valentines","stPatricks","easter","ramadan","halloween","thanksgiving","blackFriday","winter","autumn","confetti","glitter","fireworks"],
+        optionTitles: ["🎨 Custom","🎄 Christmas","🎆 New Year","❤️ Valentine's Day","☘️ St. Patrick's","🐣 Easter","🌙 Ramadan","🎃 Halloween","🦃 Thanksgiving","🛍️ Black Friday","❄️ Winter","🍂 Autumn","🎊 Confetti","✨ Glitter","🎇 Fireworks"],
+        description: "Choose a ready-made holiday theme, or select Custom to configure your own particles.",
     },
     preview: {
         type: ControlType.Boolean,
