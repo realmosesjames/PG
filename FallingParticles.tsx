@@ -912,7 +912,7 @@ addPropertyControls(FallingParticles, {
     gravity: {
         type: ControlType.Number,
         title: "Gravity",
-        defaultValue: 0.05,
+        defaultValue: 0.5,
         min: 0, max: 1, step: 0.01,
         description: "Downward acceleration force. 0 = particles float, 1 = heavy fall like rain.",
         hidden: adv,
@@ -920,7 +920,7 @@ addPropertyControls(FallingParticles, {
     speedMin: {
         type: ControlType.Number,
         title: "Speed Min",
-        defaultValue: 0.8,
+        defaultValue: 1,
         min: 0.1, max: 10, step: 0.1,
         description: "Minimum fall speed. Each particle gets a random speed between Min and Max.",
         hidden: adv,
@@ -928,7 +928,7 @@ addPropertyControls(FallingParticles, {
     speedMax: {
         type: ControlType.Number,
         title: "Speed Max",
-        defaultValue: 2.5,
+        defaultValue: 3,
         min: 0.1, max: 10, step: 0.1,
         description: "Maximum fall speed. A wider range creates more natural variation.",
         hidden: adv,
