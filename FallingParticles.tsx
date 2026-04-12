@@ -74,8 +74,9 @@ interface Props {
     particleType: "emoji" | "image" | "color"
     customEmojis: string
     imageUrl: string
+    svgUrl: string
     particleColor: string
-    particleShape: "snowflake" | "leaf" | "heart" | "star" | "confetti" | "sparkle" | "firework" | "shamrock" | "circle" | "square" | "custom"
+    particleShape: "snowflake" | "leaf" | "heart" | "star" | "confetti" | "sparkle" | "firework" | "shamrock" | "custom"
     customSvg: string
     sizeMin: number
     sizeMax: number
@@ -476,7 +477,7 @@ export default function FallingParticles(props: Props) {
     const {
         preview, background,
         advanced,
-        particleType, imageUrl, particleColor, particleShape, customSvg,
+        particleType, imageUrl, svgUrl, particleColor, particleShape, customSvg,
         animationStyle, direction,
         particleCount, preset, customEmojis,
         clickInteraction,
@@ -495,6 +496,7 @@ export default function FallingParticles(props: Props) {
     const propsRef       = useRef<Props>(props)
     const imageRef       = useRef<HTMLImageElement | null>(null)
     const svgImageRef    = useRef<HTMLImageElement | null>(null)
+    const svgUrlRef      = useRef<HTMLImageElement | null>(null)
     const prevTriggerRef = useRef<boolean>(false)
     const pausedRef      = useRef<boolean>(false)
 
@@ -502,10 +504,9 @@ export default function FallingParticles(props: Props) {
 
     propsRef.current = props
 
-    // Image loading (Image Flakes mode OR Color Flakes Custom upload)
+    // Image loading — Image Flakes mode only
     useEffect(() => {
-        const needsImage = particleType === "image" || (particleType === "color" && particleShape === "custom")
-        if (!needsImage || !imageUrl) {
+        if (particleType !== "image" || !imageUrl) {
             imageRef.current = null
             setImageStatus("idle")
             return
@@ -516,13 +517,31 @@ export default function FallingParticles(props: Props) {
         img.onload  = () => { imageRef.current = img; setImageStatus("loaded") }
         img.onerror = () => { imageRef.current = null; setImageStatus("error") }
         img.src = imageUrl
-    }, [particleType, particleShape, imageUrl])
+    }, [particleType, imageUrl])
 
-    // Custom SVG paste → rasterised image (color injected)
+    // Color Flakes custom — SVG file upload → rasterised with color injection
+    useEffect(() => {
+        if (particleType !== "color" || particleShape !== "custom" || !svgUrl) {
+            svgUrlRef.current = null; return
+        }
+        fetch(svgUrl)
+            .then(r => r.text())
+            .then(text => {
+                const colored = injectSvgColor(text, particleColor ?? "#ffffff")
+                const blob = new Blob([colored], { type: "image/svg+xml;charset=utf-8" })
+                const url  = URL.createObjectURL(blob)
+                const img  = new Image()
+                img.onload  = () => { svgUrlRef.current = img; URL.revokeObjectURL(url) }
+                img.onerror = () => { svgUrlRef.current = null; URL.revokeObjectURL(url) }
+                img.src = url
+            })
+            .catch(() => { svgUrlRef.current = null })
+    }, [particleType, particleShape, svgUrl, particleColor])
+
+    // Color Flakes custom — SVG paste → rasterised with color injection
     useEffect(() => {
         if (particleType !== "color" || particleShape !== "custom" || !customSvg?.trim()) {
-            svgImageRef.current = null
-            return
+            svgImageRef.current = null; return
         }
         const colored = injectSvgColor(customSvg, particleColor ?? "#ffffff")
         const blob = new Blob([colored], { type: "image/svg+xml;charset=utf-8" })
@@ -613,7 +632,7 @@ export default function FallingParticles(props: Props) {
             const img    = pType === "image"
                 ? imageRef.current
                 : (pType === "color" && shape === "custom")
-                ? (imageRef.current ?? svgImageRef.current)
+                ? (svgUrlRef.current ?? svgImageRef.current)
                 : null
 
             const pool = particlesRef.current
@@ -751,29 +770,33 @@ addPropertyControls(FallingParticles, {
         description: "Optional solid or semi-transparent background color behind the particles.",
     },
 
-    // ── Advanced: Particle ────────────────────────────────────────────────────
+    sizeMin: {
+        type: ControlType.Number,
+        title: "Size Min",
+        defaultValue: 12,
+        min: 4, max: 100, step: 1, unit: "px",
+        displayStepper: true,
+        description: "Smallest particle size. Each particle gets a random size between Min and Max.",
+    },
+    sizeMax: {
+        type: ControlType.Number,
+        title: "Size Max",
+        defaultValue: 40,
+        min: 4, max: 100, step: 1, unit: "px",
+        displayStepper: true,
+        description: "Largest particle size. A wider range creates more natural variation.",
+    },
+
+    // ── Custom: Particle Mode ─────────────────────────────────────────────────
     particleType: {
         type: ControlType.Enum,
-        title: "Particle Type",
-        defaultValue: "emoji",
-        options: ["emoji","image","color"],
-        optionTitles: ["Emoji Flakes","Image / Logo","Color Flakes"],
-        description: "Emoji Flakes: any emoji character. Image/Logo: upload a PNG or SVG. Color Flakes: filled vector shapes.",
+        title: "Particle Mode",
+        defaultValue: "color",
+        options: ["color","image","emoji"],
+        optionTitles: ["Color Flakes","Image Flakes","Emoji Flakes"],
+        displaySegmentedControl: true,
+        description: "Color Flakes: SVG shapes with a solid color. Image Flakes: upload any image. Emoji Flakes: any emoji character.",
         hidden: adv,
-    },
-    customEmojis: {
-        type: ControlType.String,
-        title: "Emojis",
-        defaultValue: "🎯 🔥 💎 🎸 🌈",
-        placeholder: "Space-separated emojis e.g. ❄️ ⭐ 🎁",
-        description: "Space-separated emoji characters to use as particles.",
-        hidden: (props) => adv(props) || props.particleType !== "emoji",
-    },
-    imageUrl: {
-        type: ControlType.Image,
-        title: "Upload Image",
-        description: "Upload a PNG, JPG, or SVG file. Transparent PNGs and SVGs look best.",
-        hidden: (props) => adv(props) || (props.particleType !== "image" && !(props.particleType === "color" && props.particleShape === "custom")),
     },
     particleColor: {
         type: ControlType.Color,
@@ -784,38 +807,40 @@ addPropertyControls(FallingParticles, {
     },
     particleShape: {
         type: ControlType.Enum,
-        title: "Shape",
+        title: "Shape Type",
         defaultValue: "snowflake",
-        options: ["snowflake","leaf","heart","star","confetti","sparkle","firework","shamrock","circle","square","custom"],
-        optionTitles: ["❄ Snowflake","🍃 Leaf","♥ Heart","★ Star","◆ Confetti","✦ Sparkle","✸ Firework","☘ Shamrock","● Circle","■ Square","Custom SVG"],
-        description: "Choose one of 8 preset vector shapes, or select Custom SVG to use your own icon.",
+        options: ["snowflake","leaf","heart","star","confetti","sparkle","firework","shamrock","custom"],
+        optionTitles: ["❄ Snowflakes","🍃 Leaves","♥ Hearts","★ Stars","◆ Confetti","✦ Sparkles","✸ Fireworks","☘ Shamrock","✏ Custom"],
+        description: "Choose from 8 preset SVG shapes, or select Custom to upload or paste your own SVG.",
         hidden: (props) => adv(props) || props.particleType !== "color",
+    },
+    svgUrl: {
+        type: ControlType.Image,
+        title: "Upload SVG",
+        description: "Upload an SVG file to use as a custom particle shape. Inherits the Flake Color setting.",
+        hidden: (props) => adv(props) || props.particleType !== "color" || props.particleShape !== "custom",
     },
     customSvg: {
         type: ControlType.String,
-        title: "SVG Code",
+        title: "Or Paste SVG Code",
         placeholder: "Paste <svg>…</svg> markup here",
         displayTextArea: true,
-        description: "Paste raw SVG markup to use as a custom particle shape. Use the Upload field above to upload an SVG file instead.",
+        description: "Paste raw SVG markup to use as a custom particle shape. The SVG inherits the Flake Color setting.",
         hidden: (props) => adv(props) || props.particleType !== "color" || props.particleShape !== "custom",
     },
-    sizeMin: {
-        type: ControlType.Number,
-        title: "Size Min",
-        defaultValue: 12,
-        min: 4, max: 100, step: 1, unit: "px",
-        displayStepper: true,
-        description: "Smallest particle size. Each particle gets a random size between Min and Max.",
-        hidden: adv,
+    imageUrl: {
+        type: ControlType.Image,
+        title: "Upload Image",
+        description: "Upload a PNG, JPG, GIF, WebP, or SVG file. Transparent PNGs look best.",
+        hidden: (props) => adv(props) || props.particleType !== "image",
     },
-    sizeMax: {
-        type: ControlType.Number,
-        title: "Size Max",
-        defaultValue: 40,
-        min: 4, max: 100, step: 1, unit: "px",
-        displayStepper: true,
-        description: "Largest particle size. A wider range creates more natural variation.",
-        hidden: adv,
+    customEmojis: {
+        type: ControlType.String,
+        title: "Emoji",
+        defaultValue: "🎯 🔥 💎 🎸 🌈",
+        placeholder: "e.g. ❄️ ⭐ 🎁",
+        description: "Type any emoji to use as particles. Separate multiple emojis with spaces.",
+        hidden: (props) => adv(props) || props.particleType !== "emoji",
     },
 
     // ── Advanced: Motion ──────────────────────────────────────────────────────
