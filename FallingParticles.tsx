@@ -475,6 +475,7 @@ function injectSvgColor(svg: string, color: string): string {
 export default function FallingParticles(props: Props) {
     const {
         preview, background,
+        advanced,
         particleType, imageUrl, particleColor, particleShape, customSvg,
         animationStyle, direction,
         particleCount, preset, customEmojis,
@@ -603,7 +604,7 @@ export default function FallingParticles(props: Props) {
             const p           = propsRef.current
             const presetEntry  = PRESET_MAP[p.preset ?? "christmas"] ?? PRESET_MAP.christmas
             const isPresetMode = !p.advanced
-            const emojis = isPresetMode ? [] : resolveEmojis(p)
+            const emojis = resolveEmojis(p)
             const aStyle = p.animationStyle ?? "falling"
             const dir    = p.direction     ?? "down"
             const pType  = isPresetMode ? "color" : (p.particleType  ?? "emoji")
@@ -632,7 +633,7 @@ export default function FallingParticles(props: Props) {
         rafRef.current = requestAnimationFrame(tick)
         return () => { cancelAnimationFrame(rafRef.current) }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [particleCount, preset, customEmojis, animationStyle, direction, particleType, preview, scheduled])
+    }, [particleCount, preset, advanced, customEmojis, animationStyle, direction, particleType, preview, scheduled])
 
     // Shared interaction logic
     const handleInteraction = useCallback((canvasX: number, canvasY: number) => {
