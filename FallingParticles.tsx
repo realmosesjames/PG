@@ -794,7 +794,7 @@ addPropertyControls(FallingParticles, {
         defaultValue: "color",
         options: ["color","image","emoji"],
         optionTitles: ["Color Flakes","Image Flakes","Emoji Flakes"],
-        displaySegmentedControl: true,
+
         description: "Color Flakes: SVG shapes with a solid color. Image Flakes: upload any image. Emoji Flakes: any emoji character.",
         hidden: adv,
     },
