@@ -130,12 +130,15 @@ interface Props {
 
 function rand(min: number, max: number) { return min + Math.random() * (max - min) }
 
+const DEFAULT_EMOJIS = ["❄️", "⭐", "✨", "🎉", "🌟"]
+
 function resolveEmojis(p: Partial<Props>): string[] {
     if (p.preset === "custom") {
         const parsed = (p.customEmojis ?? "").split(/[\s,]+/).map(s => s.trim()).filter(Boolean)
-        return parsed.length > 0 ? parsed : PRESET_MAP.winter.emojis
+        return parsed.length > 0 ? parsed : DEFAULT_EMOJIS
     }
-    return PRESET_MAP[p.preset ?? "winter"]?.emojis ?? PRESET_MAP.winter.emojis
+    const presetEmojis = PRESET_MAP[p.preset ?? "christmas"]?.emojis
+    return presetEmojis && presetEmojis.length > 0 ? presetEmojis : DEFAULT_EMOJIS
 }
 
 function isWithinSchedule(enabled: boolean, sm: number, sd: number, em: number, ed: number): boolean {
@@ -443,7 +446,7 @@ function drawParticle(
         } else {
             ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,r*0.8,0,Math.PI*2); ctx.fill()
         }
-    } else {
+    } else if (particle.emoji) {
         ctx.font = `${size}px serif`
         ctx.textAlign = "center"; ctx.textBaseline = "middle"
         ctx.fillText(particle.emoji, 0, 0)
